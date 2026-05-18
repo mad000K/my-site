@@ -73,6 +73,21 @@ const STYLES = `
   @keyframes spin { to { transform: rotate(360deg); } }
   .fade-in { animation: fadeIn .3s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .bs-card { border-radius: 10px; padding: 12px; }
+    .bs-btn { padding: 8px 16px; font-size: 12px; }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 13px; }
+    .bs-card { border-radius: 8px; padding: 10px; }
+    .bs-btn { padding: 6px 12px; font-size: 11px; }
+  }
+`;
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 `;
 
 const C = {
@@ -246,57 +261,59 @@ function FullscreenLeaderboard({ standings, onClose }) {
     <div style={{
       position: "fixed", inset: 0,
       background: "linear-gradient(160deg,#07071a,#0d0a2a)",
-      zIndex: 9999, overflow: "auto", padding: 32,
+      zIndex: 9999, overflow: "auto", padding: "clamp(16px, 5%, 32px)",
     }}>
       <style>{`
         @keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
         .row-anim { animation: slideIn .4s ease both; }
+        @media (max-width: 768px) {
+          .row-anim { animation: slideIn .3s ease both; }
+        }
       `}</style>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-          <div>
-            <h1 style={{ fontFamily: "Russo One", fontSize: 36, color: C.primary, textShadow: `0 0 30px ${C.primary}66` }}>
+      <div style={{ maxWidth: "clamp(320px, 100%, 900px)", margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "clamp(16px, 4%, 32px)", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontFamily: "Russo One", fontSize: "clamp(20px, 6vw, 36px)", color: C.primary, textShadow: `0 0 30px ${C.primary}66`, lineHeight: 1.1 }}>
               ⚡ BRAWL STARS ТУРНІР
             </h1>
-            <p style={{ color: C.muted, fontFamily: "Barlow", fontWeight: 600, fontSize: 14 }}>Режим спостерігача • Live Leaderboard</p>
+            <p style={{ color: C.muted, fontFamily: "Barlow", fontWeight: 600, fontSize: "clamp(12px, 2.5vw, 14px)", marginTop: "clamp(4px, 1%, 8px)" }}>Режим спостерігача • Live Leaderboard</p>
           </div>
-
         </div>
 
         {standings.map((team, i) => (
           <div key={team.id} className="row-anim bs-card" style={{
             animationDelay: `${i * 0.04}s`,
-            display: "flex", alignItems: "center", gap: 20,
+            display: "flex", alignItems: "center", gap: "clamp(12px, 3%, 20px)",
             background: i === 0 ? "linear-gradient(135deg,rgba(249,197,34,.12),rgba(255,140,0,.06))" : i === 1 ? "rgba(200,200,220,.05)" : i === 2 ? "rgba(205,127,50,.06)" : "rgba(255,255,255,.03)",
             border: `1px solid ${i === 0 ? C.primary + "55" : i === 1 ? "rgba(200,200,220,.2)" : i === 2 ? "rgba(205,127,50,.25)" : "rgba(255,255,255,.07)"}`,
-            borderRadius: 14, padding: "16px 24px", marginBottom: 8,
-            transition: "transform .2s",
+            borderRadius: "clamp(8px, 2%, 14px)", padding: "clamp(12px, 3%, 24px)", marginBottom: "clamp(6px, 1%, 8px)",
+            transition: "transform .2s", flexWrap: "wrap",
           }}>
-            <div style={{ width: 52, textAlign: "center", flexShrink: 0 }}>
-              {i === 0 ? <span style={{ fontSize: 28 }}>👑</span>
-                : i === 1 ? <span style={{ fontFamily: "Russo One", fontSize: 28, color: "#c8c8dc" }}>2</span>
-                : i === 2 ? <span style={{ fontFamily: "Russo One", fontSize: 28, color: "#cd7f32" }}>3</span>
-                : <span style={{ fontFamily: "Russo One", fontSize: 24, color: C.muted }}>{i + 1}</span>}
+            <div style={{ width: "clamp(36px, 8%, 52px)", textAlign: "center", flexShrink: 0 }}>
+              {i === 0 ? <span style={{ fontSize: "clamp(24px, 6vw, 28px)" }}>👑</span>
+                : i === 1 ? <span style={{ fontFamily: "Russo One", fontSize: "clamp(24px, 6vw, 28px)", color: "#c8c8dc" }}>2</span>
+                : i === 2 ? <span style={{ fontFamily: "Russo One", fontSize: "clamp(24px, 6vw, 28px)", color: "#cd7f32" }}>3</span>
+                : <span style={{ fontFamily: "Russo One", fontSize: "clamp(18px, 5vw, 24px)", color: C.muted }}>{i + 1}</span>}
             </div>
-            <div style={{ width: 8, height: 48, borderRadius: 4, background: team.color, flexShrink: 0, boxShadow: `0 0 10px ${team.color}88` }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "Russo One", fontSize: 20, color: C.text }}>{team.name}</div>
-              <div style={{ fontSize: 13, color: C.muted, fontFamily: "Barlow", fontWeight: 600 }}>
+            <div style={{ width: 6, height: "clamp(36px, 8vw, 48px)", borderRadius: 4, background: team.color, flexShrink: 0, boxShadow: `0 0 10px ${team.color}88` }} />
+            <div style={{ flex: 1, minWidth: 0, minWidth: "150px" }}>
+              <div style={{ fontFamily: "Russo One", fontSize: "clamp(14px, 4vw, 20px)", color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{team.name}</div>
+              <div style={{ fontSize: "clamp(11px, 2.5vw, 13px)", color: C.muted, fontFamily: "Barlow", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "clamp(2px, 0.5%, 4px)" }}>
                 {team.player1} · {team.player2}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "Russo One", fontSize: 18, color: C.secondary }}>{team.kills}</div>
-                <div style={{ fontSize: 10, color: C.muted, fontFamily: "Barlow", letterSpacing: 1 }}>КІЛИ</div>
+            <div style={{ display: "flex", gap: "clamp(12px, 3%, 24px)", alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ textAlign: "center", minWidth: "50px" }}>
+                <div style={{ fontFamily: "Russo One", fontSize: "clamp(14px, 4vw, 18px)", color: C.secondary }}>{team.kills}</div>
+                <div style={{ fontSize: "clamp(8px, 2vw, 10px)", color: C.muted, fontFamily: "Barlow", letterSpacing: 0.5 }}>КІЛИ</div>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "Russo One", fontSize: 18, color: C.pink }}>{team.wins}</div>
-                <div style={{ fontSize: 10, color: C.muted, fontFamily: "Barlow", letterSpacing: 1 }}>ПЕРЕМОГИ</div>
+              <div style={{ textAlign: "center", minWidth: "50px" }}>
+                <div style={{ fontFamily: "Russo One", fontSize: "clamp(14px, 4vw, 18px)", color: C.pink }}>{team.wins}</div>
+                <div style={{ fontSize: "clamp(8px, 2vw, 10px)", color: C.muted, fontFamily: "Barlow", letterSpacing: 0.5 }}>ПЕРЕМОГИ</div>
               </div>
-              <div style={{ background: i === 0 ? `${C.primary}22` : "rgba(255,255,255,.07)", border: `2px solid ${i === 0 ? C.primary + "88" : "rgba(255,255,255,.12)"}`, borderRadius: 12, padding: "10px 20px", textAlign: "center", minWidth: 80 }}>
-                <div style={{ fontFamily: "Russo One", fontSize: 28, color: i === 0 ? C.primary : C.text, textShadow: i === 0 ? `0 0 20px ${C.primary}88` : "none" }}>{team.points}</div>
-                <div style={{ fontSize: 9, color: C.muted, fontFamily: "Barlow", fontWeight: 700, letterSpacing: 1.5 }}>БАЛІВ</div>
+              <div style={{ background: i === 0 ? `${C.primary}22` : "rgba(255,255,255,.07)", border: `2px solid ${i === 0 ? C.primary + "88" : "rgba(255,255,255,.12)"}`, borderRadius: "clamp(8px, 2%, 12px)", padding: "clamp(6px, 2%, 10px) clamp(12px, 3%, 20px)", textAlign: "center", minWidth: "clamp(60px, 15%, 80px)" }}>
+                <div style={{ fontFamily: "Russo One", fontSize: "clamp(18px, 5vw, 28px)", color: i === 0 ? C.primary : C.text, textShadow: i === 0 ? `0 0 20px ${C.primary}88` : "none" }}>{team.points}</div>
+                <div style={{ fontSize: "clamp(7px, 1.5vw, 9px)", color: C.muted, fontFamily: "Barlow", fontWeight: 700, letterSpacing: 1 }}>БАЛІВ</div>
               </div>
             </div>
           </div>
