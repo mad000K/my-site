@@ -397,9 +397,7 @@ function FullscreenLeaderboard({ standings, onClose }) {
             </h1>
             <p style={{ color: C.muted, fontFamily: "Barlow", fontWeight: 600, fontSize: "clamp(11px, 2vw, 14px)", marginTop: 4 }}>Режим спостерігача • Live Leaderboard</p>
           </div>
-          <Btn small variant="outline" color={C.muted} onClick={onClose}>
-            <X size={13} /> Закрити
-          </Btn>
+
         </div>
 
         {standings.map((team, i) => (
