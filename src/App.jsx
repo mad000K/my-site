@@ -260,9 +260,7 @@ function FullscreenLeaderboard({ standings, onClose }) {
             </h1>
             <p style={{ color: C.muted, fontFamily: "Barlow", fontWeight: 600, fontSize: 14 }}>Режим спостерігача • Live Leaderboard</p>
           </div>
-          <button className="bs-btn" onClick={onClose} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)", borderRadius: 100, padding: "10px 20px", color: "#fff", fontFamily: "Barlow", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
-            <EyeOff size={14} /> Вийти
-          </button>
+
         </div>
 
         {standings.map((team, i) => (
@@ -1057,7 +1055,7 @@ export default function App() {
 
           {/* Tabs */}
           <div style={{ display: "flex", gap: 4 }}>
-            {TABS.map(t => (
+            {TABS.filter(t => t.id === "leaderboard").map(t => (
               <button key={t.id} className="tab" onClick={() => setTab(t.id)} style={{
                 background: tab === t.id ? "#fff" : "rgba(0,0,0,.2)",
                 color: tab === t.id ? "#0a0a1a" : "#fff",
