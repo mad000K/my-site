@@ -395,8 +395,7 @@ function FullscreenLeaderboard({ standings, onClose }) {
             <h1 style={{ fontFamily: "Russo One", fontSize: "clamp(18px, 5vw, 34px)", color: C.primary, textShadow: `0 0 30px ${C.primary}66`, lineHeight: 1.1 }}>
               ⚡ BRAWL STARS ТУРНІР
             </h1>
-            <p style={{ color: C.muted, fontFamily: "Barlow", fontWeight: 600, fontSize: "clamp(11px, 2vw, 14px)", marginTop: 4 }}>Режим спостерігача • Live Leaderboard</p>
-          </div>
+        </div>
 
         </div>
 
