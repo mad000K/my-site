@@ -296,7 +296,7 @@ function FullscreenLeaderboard({ standings, onClose }) {
                 : <span style={{ fontFamily: "Russo One", fontSize: "clamp(18px, 5vw, 24px)", color: C.muted }}>{i + 1}</span>}
             </div>
             <div style={{ width: 6, height: "clamp(36px, 8vw, 48px)", borderRadius: 4, background: team.color, flexShrink: 0, boxShadow: `0 0 10px ${team.color}88` }} />
-            <div style={{ flex: 1, minWidth: 0, minWidth: "150px" }}>
+            <div style={{ flex: 1, minWidth: "150px" }}>
               <div style={{ fontFamily: "Russo One", fontSize: "clamp(14px, 4vw, 20px)", color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{team.name}</div>
               <div style={{ fontSize: "clamp(11px, 2.5vw, 13px)", color: C.muted, fontFamily: "Barlow", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "clamp(2px, 0.5%, 4px)" }}>
                 {team.player1} · {team.player2}
