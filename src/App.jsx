@@ -382,7 +382,7 @@ function LeaderboardTab({ standings, rounds, setFullscreen }) {
 }
 
 // ─── Fullscreen Observer ──────────────────────────────────────
-function FullscreenLeaderboard({ standings, onClose }) {
+function FullscreenLeaderboard({ standings, onClose, isEditorMode, onEditModeClick, onExitEditor }) {
   return (
     <div style={{
       position: "fixed", inset: 0,
@@ -399,7 +399,52 @@ function FullscreenLeaderboard({ standings, onClose }) {
             <h1 style={{ fontFamily: "Russo One", fontSize: "clamp(18px, 5vw, 34px)", color: C.primary, textShadow: `0 0 30px ${C.primary}66`, lineHeight: 1.1 }}>
               ⚡ BRAWL STARS ТУРНІР
             </h1>
-        </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button
+              className="bs-btn"
+              onClick={isEditorMode ? onExitEditor : onEditModeClick}
+              style={{
+                background: isEditorMode ? "rgba(232,67,147,.16)" : "rgba(249,197,34,.16)",
+                border: `1px solid ${isEditorMode ? "rgba(232,67,147,.45)" : "rgba(249,197,34,.45)"}`,
+                borderRadius: 10,
+                padding: "8px 12px",
+                color: isEditorMode ? C.pink : C.primary,
+                cursor: "pointer",
+                fontSize: 12,
+                fontFamily: "Russo One",
+                fontWeight: "bold",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+              title={isEditorMode ? "Exit edit mode" : "Enter edit mode"}
+            >
+              {isEditorMode ? <EyeOff size={14} /> : <Check size={14} />}
+              {isEditorMode ? "EXIT EDIT" : "EDIT"}
+            </button>
+            <button
+              className="bs-btn"
+              onClick={onClose}
+              style={{
+                background: "rgba(255,255,255,.08)",
+                border: "1px solid rgba(255,255,255,.18)",
+                borderRadius: 10,
+                padding: "8px 12px",
+                color: C.text,
+                cursor: "pointer",
+                fontSize: 12,
+                fontFamily: "Russo One",
+                fontWeight: "bold",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+              title="Close live view"
+            >
+              <X size={14} /> CLOSE
+            </button>
+          </div>
 
         </div>
 
@@ -746,7 +791,7 @@ function PinModal({ onClose, onUnlock }) {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 11000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
       <div className="fade-in" style={{ background: C.card, border: `1px solid ${C.borderHover}`, borderRadius: 18, padding: "32px 24px", width: "100%", maxWidth: 360 }} onClick={e => e.stopPropagation()}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🔐</div>
@@ -1205,7 +1250,18 @@ export default function App() {
         />
       )}
 
-      {fullscreen && <FullscreenLeaderboard standings={standings} onClose={() => setFullscreen(false)} />}
+      {fullscreen && (
+        <FullscreenLeaderboard
+          standings={standings}
+          onClose={() => setFullscreen(false)}
+          isEditorMode={isEditorMode}
+          onEditModeClick={() => setShowPinModal(true)}
+          onExitEditor={() => {
+            localStorage.removeItem("bs_editor_unlocked");
+            setIsEditorMode(false);
+          }}
+        />
+      )}
     </div>
   );
 }
