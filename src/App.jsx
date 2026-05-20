@@ -716,6 +716,8 @@ function PinModal({ onClose, onUnlock }) {
   const [error, setError] = useState("");
   const { isMobile } = useScreenSize();
 
+  console.log("PinModal открыт");
+
   const handleSubmit = () => {
     if (pin === EDITOR_PIN) {
       localStorage.setItem("bs_editor_unlocked", "true");
@@ -983,6 +985,7 @@ export default function App() {
       
       const editorUnlocked = localStorage.getItem("bs_editor_unlocked") === "true";
       setIsEditorMode(editorUnlocked);
+      console.log("App loaded, isEditorMode:", editorUnlocked);
     } catch (e) {
       setTeams(DEFAULT_TEAMS);
       setRounds(DEFAULT_ROUNDS);
@@ -1059,21 +1062,25 @@ export default function App() {
               {!isEditorMode && (
                 <button
                   className="bs-btn"
-                  onClick={() => setShowPinModal(true)}
+                  onClick={() => {
+                    console.log("Click lock button - showing PIN modal");
+                    setShowPinModal(true);
+                  }}
                   style={{
-                    background: "rgba(0,0,0,.2)",
-                    border: "none",
+                    background: "rgba(249,197,34,.15)",
+                    border: "1px solid rgba(249,197,34,.3)",
                     borderRadius: 10,
                     padding: isMobile ? "6px 10px" : "8px 12px",
-                    color: "rgba(255,255,255,.7)",
+                    color: "#f9c522",
                     cursor: "pointer",
                     fontSize: 12,
                     fontFamily: "Russo One",
                     transition: "all .2s",
+                    fontWeight: "bold",
                   }}
                   title="Увійти в режим редагування"
                 >
-                  🔒
+                  🔒 РЕДАГУВАННЯ
                 </button>
               )}
               {isEditorMode && (
@@ -1093,10 +1100,11 @@ export default function App() {
                     fontSize: 12,
                     fontFamily: "Russo One",
                     transition: "all .2s",
+                    fontWeight: "bold",
                   }}
                   title="Вихід з режиму редагування"
                 >
-                  🔓 РЕДАГУВАННЯ
+                  🔓 ВИХІД
                 </button>
               )}
               <div style={{ background: "rgba(0,0,0,.2)", borderRadius: 10, padding: isMobile ? "5px 10px" : "6px 12px", textAlign: "center" }}>
