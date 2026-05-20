@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { Trophy, Users, Plus, X, Check, Crown, Sword, Shuffle, Star, Zap, Eye, EyeOff, RefreshCw, ChevronUp, ChevronDown, Award, Target } from "lucide-react";
 
+
+
+
 // ─── Default Data ──────────────────────────────────────────────
 const DEFAULT_TEAMS = [{"name":"Пивні Кіборги ","player1":"Дишлюк Денис","player2":"Денисюк Даніл / (au)БУДУ БАНИТЬ","sub":"","id":1778744515616,"color":"#f9c522"},{"name":"ТАБАБА","player1":"Майстренко Олексій / inti","player2":"Сімонов Олександр","sub":"","id":1778744861855,"color":"#ff8c00"},{"name":"Масони","player1":"Радучич Вадим / bozdi","player2":"Кисет Ілля/Top4ik","sub":"","id":1778744964447,"color":"#e84393"},{"name":"Канабіси","player1":"Домінюк Кароліна/ голий їжачок ","player2":"Петренко Ярослав","sub":"","id":1778745004863,"color":"#9b1fde"},{"name":"2-Кусочка сала","player1":"Кіріченко Роман ","player2":"Джерін Костянтин ","sub":"","id":1778745028175,"color":"#22c5f9"},{"name":"GYMBROO","player1":"Яговий Дмитро/Ок","player2":"Секрет Віталій ","sub":"","id":1778745060568,"color":"#22f977"},{"name":"наві","player1":"Циганок Максим / SYNQ1XX ","player2":"Дяченко Вадим/ вадимка🫨☦️","sub":"","id":1778745083071,"color":"#f95252"},{"name":"Ihori","player1":"Simple","player2":"Сокур Роман NeExP_hub","sub":"Томенюк Іван /ролекс ","id":1778745106703,"color":"#c5f922"},{"name":"Гроші в тумбочкі","player1":"Верещака Валерія / Cactus ","player2":"Лизогуб Валерія/<3","sub":"","id":1778745140879,"color":"#f9a522"},{"name":"sixseven","player1":"Потапенко Вікторія/ vixxss07","player2":"Лебідь Ярослав / SHAMEL","sub":"","id":1778754685072,"color":"#2254f9"},{"name":"лопухи","player1":"Буряк Марія/ meet","player2":"Саєнко Емма","sub":"","id":1778754736449,"color":"#f922c5"},{"name":"цвіркуни","player1":"Паламарчук Віталій ","player2":"Українець Віктор / VERFEN","sub":"","id":1778754823864,"color":"#22f9c5"},{"name":"ред бул","player1":"Крапива Назар ","player2":"Nazar Zagorodnij","sub":"","id":1778754851560,"color":"#aef922"},{"name":"Totem","player1":"Салан Єгор / Da1RoYY","player2":"Онойко Андрій / E1xzen ","sub":"","id":1778754946904,"color":"#9922f9"},{"name":"Кракен","player1":"Поцепаєв Іван","player2":"Джунусов Святослав / Tilted|🇺🇦","sub":"","id":1778754989664,"color":"#f97722"},{"name":"99x505","player1":"Голубʼєв Давид / gd | シ","player2":"Рябець Єгор/z0707ss","sub":"","id":1778755029752,"color":"#f9c522"},{"name":"Maslodolb","player1":"Юсупов Максим / симон","player2":"Маттео Горожанкін","sub":"Федорченко Іван / борщик","id":1778755101008,"color":"#ff8c00"},{"name":"квадратік","player1":"Тараненко Олександр","player2":"Іваненко Андрій","sub":"","id":1778755146361,"color":"#e84393"},{"name":"Смердольфіки","player1":"Соломаха Олександр @_саньок_@","player2":"Кримський Діма / Chushka5","sub":"","id":1778755193304,"color":"#9b1fde"},{"name":"гуд зона","player1":"Онофрей, Ростислав / Drago Raymond ","player2":"Артем Маляренко ","sub":"","id":1778755640640,"color":"#22c5f9"}];
 
 const DEFAULT_ROUNDS = [{"id":1778756416209,"day":1,"roundNum":1,"lobbies":[{"id":"A","teamIds":[1778754946904,1778755101008,1778745106703,1778754823864,1778744964447],"results":{"1778754946904":{"placement":2,"kills":3},"1778755101008":{"placement":1,"kills":7},"1778745106703":{"placement":4,"kills":0},"1778754823864":{"placement":3,"kills":2},"1778744964447":{"placement":5,"kills":0}}},{"id":"B","teamIds":[1778754851560,1778755146361,1778755193304,1778745140879,1778755640640],"results":{"1778754851560":{"placement":5,"kills":1},"1778755146361":{"placement":4,"kills":1},"1778755193304":{"placement":2,"kills":0},"1778745140879":{"placement":1,"kills":6},"1778755640640":{"placement":3,"kills":2}}},{"id":"C","teamIds":[1778754736449,1778744861855,1778745060568,1778745083071,1778745004863],"results":{"1778754736449":{"placement":1,"kills":3},"1778744861855":{"placement":4,"kills":0},"1778745060568":{"placement":5,"kills":1},"1778745083071":{"placement":2,"kills":6},"1778745004863":{"placement":3,"kills":3}}},{"id":"L4","teamIds":[1778744515616,1778754989664,1778745028175,1778755029752,1778754685072],"results":{"1778744515616":{"placement":3,"kills":2},"1778754989664":{"placement":2,"kills":6},"1778745028175":{"placement":1,"kills":4},"1778755029752":{"placement":4,"kills":1},"1778754685072":{"placement":5,"kills":0}}}]}];
 
 // ─── Constants ────────────────────────────────────────────────
+const EDITOR_PIN = "525533";
 const PLACEMENT_PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 1 };
 const LOBBY_LABELS = ["A", "B", "C"];
 const TEAM_COLORS = [
@@ -443,7 +447,7 @@ function FullscreenLeaderboard({ standings, onClose }) {
 }
 
 // ─── Teams Tab ────────────────────────────────────────────────
-function TeamsTab({ teams, standings, onAdd, onDelete, onEdit }) {
+function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode }) {
   const { isMobile } = useScreenSize();
   const standingsMap = {};
   standings.forEach((t, i) => { standingsMap[t.id] = { rank: i + 1, points: t.points }; });
@@ -452,9 +456,9 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit }) {
     <div className="fade-in">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         <SectionTitle icon="👥">Команди ({teams.length})</SectionTitle>
-        <Btn onClick={onAdd} small={isMobile}>
+        {isEditorMode && <Btn onClick={onAdd} small={isMobile}>
           <Plus size={14} /> Додати
-        </Btn>
+        </Btn>}
       </div>
 
       {teams.length === 0 ? (
@@ -482,7 +486,7 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit }) {
                       🎮 {team.player2}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  {isEditorMode && <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button
                       className="bs-btn"
                       onClick={() => onEdit(team)}
@@ -493,7 +497,7 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit }) {
                       onClick={() => onDelete(team.id)}
                       style={{ background: "rgba(255,80,80,.12)", border: "1px solid rgba(255,80,80,.2)", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center" }}
                     ><X size={12} color="rgba(255,120,120,.8)" /></button>
-                  </div>
+                  </div>}
                 </div>
               </Card>
             );
@@ -505,7 +509,7 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit }) {
 }
 
 // ─── Rounds Tab ───────────────────────────────────────────────
-function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults }) {
+function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults, isEditorMode }) {
   const [activeDay, setActiveDay] = useState(1);
   const { isMobile } = useScreenSize();
 
@@ -549,9 +553,9 @@ function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults })
       {/* Generate button */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         <SectionTitle icon="⚔️">Раунди — День {activeDay} ({dayRounds.length}/3)</SectionTitle>
-        <Btn onClick={() => onGenerate(activeDay)} disabled={!canGenerate} color={DAY_COLORS[activeDay]} small={isMobile}>
+        {isEditorMode && <Btn onClick={() => onGenerate(activeDay)} disabled={!canGenerate} color={DAY_COLORS[activeDay]} small={isMobile}>
           <Shuffle size={14} /> {isMobile ? "Генерувати" : "Генерувати раунд"}
-        </Btn>
+        </Btn>}
       </div>
 
       {dayRounds.length === 0 ? (
@@ -577,11 +581,11 @@ function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults })
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   {roundComplete(round) && <Badge color="#22f977">✓ Завершено</Badge>}
-                  <button
+                  {isEditorMode && <button
                     className="bs-btn"
                     onClick={() => onDeleteRound(round.id)}
                     style={{ background: "rgba(255,80,80,.1)", border: "1px solid rgba(255,80,80,.18)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                  ><X size={12} color="rgba(255,120,120,.7)" /></button>
+                  ><X size={12} color="rgba(255,120,120,.7)" /></button>}
                 </div>
               </div>
 
@@ -590,8 +594,10 @@ function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults })
                 {round.lobbies.map((lobby, li) => {
                   const complete = lobbyComplete(lobby);
                   return (
-                    <div key={li} className="bs-btn lobby-cell" onClick={() => onEnterResults(round.id, li)} style={{
+                    <div key={li} className={isEditorMode ? "bs-btn lobby-cell" : "lobby-cell"} onClick={() => isEditorMode && onEnterResults(round.id, li)} style={{
                       background: complete ? "rgba(34,249,119,.03)" : "transparent",
+                      cursor: isEditorMode ? "pointer" : "default",
+                      opacity: isEditorMode ? 1 : 0.9,
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                         <span style={{ fontFamily: "Russo One", fontSize: 13, color: complete ? "#22f977" : C.primary }}>
@@ -632,7 +638,7 @@ function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults })
 }
 
 // ─── Finals Tab ───────────────────────────────────────────────
-function FinalsTab({ standings, rounds, teams, saveRounds }) {
+function FinalsTab({ standings, rounds, teams, saveRounds, isEditorMode }) {
   const [topN, setTopN] = useState(10);
   const { isMobile } = useScreenSize();
   const finalsRounds = rounds.filter(r => r.day === 3);
@@ -657,26 +663,30 @@ function FinalsTab({ standings, rounds, teams, saveRounds }) {
         </div>
       </Card>
 
-      <SectionTitle icon="🏅">Налаштування фіналу</SectionTitle>
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontFamily: "Barlow", fontWeight: 700, marginBottom: 8, letterSpacing: 1 }}>ФІНАЛІСТІВ</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[5, 10].map(n => (
-              <button key={n} className="bs-btn" onClick={() => setTopN(n)} style={{
-                background: topN === n ? C.pink : "transparent",
-                color: topN === n ? "#0a0a1a" : C.muted,
-                border: `2px solid ${topN === n ? C.pink : C.border}`,
-                borderRadius: 100, padding: "8px 20px",
-                fontFamily: "Russo One", fontSize: 13,
-              }}>Топ {n}</button>
-            ))}
-          </div>
-        </div>
-        <Btn onClick={generateFinals} color={C.pink} disabled={standings.length < 5} small={isMobile}>
-          <Crown size={14} /> Генерувати фінал
-        </Btn>
-      </Card>
+      {isEditorMode && (
+        <>
+          <SectionTitle icon="🏅">Налаштування фіналу</SectionTitle>
+          <Card style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.muted, fontFamily: "Barlow", fontWeight: 700, marginBottom: 8, letterSpacing: 1 }}>ФІНАЛІСТІВ</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {[5, 10].map(n => (
+                  <button key={n} className="bs-btn" onClick={() => setTopN(n)} style={{
+                    background: topN === n ? C.pink : "transparent",
+                    color: topN === n ? "#0a0a1a" : C.muted,
+                    border: `2px solid ${topN === n ? C.pink : C.border}`,
+                    borderRadius: 100, padding: "8px 20px",
+                    fontFamily: "Russo One", fontSize: 13,
+                  }}>Топ {n}</button>
+                ))}
+              </div>
+            </div>
+            <Btn onClick={generateFinals} color={C.pink} disabled={standings.length < 5} small={isMobile}>
+              <Crown size={14} /> Генерувати фінал
+            </Btn>
+          </Card>
+        </>
+      )}
 
       <SectionTitle icon="🔥">Топ {topN} — фіналісти</SectionTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -695,6 +705,73 @@ function FinalsTab({ standings, rounds, teams, saveRounds }) {
             </div>
           </Card>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── PIN Modal ───────────────────────────────────────────────
+function PinModal({ onClose, onUnlock }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+  const { isMobile } = useScreenSize();
+
+  const handleSubmit = () => {
+    if (pin === EDITOR_PIN) {
+      localStorage.setItem("bs_editor_unlocked", "true");
+      onUnlock();
+      onClose();
+    } else {
+      setError("❌ Неправильний PIN");
+      setPin("");
+      setTimeout(() => setError(""), 2000);
+    }
+  };
+
+  const inputStyle = {
+    background: "rgba(255,255,255,.05)",
+    border: `1px solid ${error ? "#ff5050" : C.border}`,
+    borderRadius: 10,
+    padding: "12px 14px",
+    color: "#fff",
+    fontSize: 16,
+    width: "100%",
+    fontFamily: "Barlow",
+    fontWeight: 600,
+    transition: "all .2s",
+    letterSpacing: "3px",
+    textAlign: "center",
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+      <div className="fade-in" style={{ background: C.card, border: `1px solid ${C.borderHover}`, borderRadius: 18, padding: "32px 24px", width: "100%", maxWidth: 360 }} onClick={e => e.stopPropagation()}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🔐</div>
+          <span style={{ fontFamily: "Russo One", fontSize: 18, color: C.primary, display: "block", marginBottom: 4 }}>Режим редагування</span>
+          <span style={{ fontSize: 13, color: C.muted, fontFamily: "Barlow" }}>Введи PIN для доступу до редагування</span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 11, color: C.muted, fontFamily: "Barlow", fontWeight: 700, letterSpacing: 1, display: "block", marginBottom: 8 }}>PIN-КОД</label>
+            <input
+              type="password"
+              style={inputStyle}
+              placeholder="• • • • • •"
+              value={pin}
+              onChange={e => { setPin(e.target.value); setError(""); }}
+              onKeyPress={e => e.key === "Enter" && handleSubmit()}
+              autoFocus
+            />
+            {error && <div style={{ fontSize: 12, color: "#ff5050", fontFamily: "Barlow", marginTop: 6, textAlign: "center" }}>{error}</div>}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <Btn variant="outline" color={C.muted} onClick={onClose} style={{ flex: 1 }}>Скасувати</Btn>
+          <Btn onClick={handleSubmit} style={{ flex: 1 }}><Check size={14} /> Вхід</Btn>
+        </div>
       </div>
     </div>
   );
@@ -893,6 +970,8 @@ export default function App() {
   const [entryModal, setEntryModal] = useState(null);
   const [fullscreen, setFullscreen] = useState(true);
   const [editTeam, setEditTeam] = useState(null);
+  const [isEditorMode, setIsEditorMode] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
   const { isMobile } = useScreenSize();
 
   useEffect(() => {
@@ -901,6 +980,9 @@ export default function App() {
       const savedRounds = localStorage.getItem("bs_r3");
       setTeams(savedTeams ? JSON.parse(savedTeams) : DEFAULT_TEAMS);
       setRounds(savedRounds ? JSON.parse(savedRounds) : DEFAULT_ROUNDS);
+      
+      const editorUnlocked = localStorage.getItem("bs_editor_unlocked") === "true";
+      setIsEditorMode(editorUnlocked);
     } catch (e) {
       setTeams(DEFAULT_TEAMS);
       setRounds(DEFAULT_ROUNDS);
@@ -973,7 +1055,50 @@ export default function App() {
                 </p>
               )}
             </div>
-            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
+              {!isEditorMode && (
+                <button
+                  className="bs-btn"
+                  onClick={() => setShowPinModal(true)}
+                  style={{
+                    background: "rgba(0,0,0,.2)",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: isMobile ? "6px 10px" : "8px 12px",
+                    color: "rgba(255,255,255,.7)",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: "Russo One",
+                    transition: "all .2s",
+                  }}
+                  title="Увійти в режим редагування"
+                >
+                  🔒
+                </button>
+              )}
+              {isEditorMode && (
+                <button
+                  className="bs-btn"
+                  onClick={() => {
+                    localStorage.removeItem("bs_editor_unlocked");
+                    setIsEditorMode(false);
+                  }}
+                  style={{
+                    background: "rgba(249,197,34,.2)",
+                    border: "1px solid rgba(249,197,34,.4)",
+                    borderRadius: 10,
+                    padding: isMobile ? "6px 10px" : "8px 12px",
+                    color: "#f9c522",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: "Russo One",
+                    transition: "all .2s",
+                  }}
+                  title="Вихід з режиму редагування"
+                >
+                  🔓 РЕДАГУВАННЯ
+                </button>
+              )}
               <div style={{ background: "rgba(0,0,0,.2)", borderRadius: 10, padding: isMobile ? "5px 10px" : "6px 12px", textAlign: "center" }}>
                 <div style={{ fontFamily: "Russo One", fontSize: isMobile ? 15 : 18, color: "#fff" }}>{teams.length}</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,.7)", letterSpacing: 1 }}>КОМАНД</div>
@@ -1014,6 +1139,7 @@ export default function App() {
             onGenerate={generateRound}
             onDeleteRound={id => saveRounds(rounds.filter(r => r.id !== id))}
             onEnterResults={(roundId, lobbyIdx) => setEntryModal({ roundId, lobbyIdx })}
+            isEditorMode={isEditorMode}
           />
         )}
         {tab === "teams" && (
@@ -1022,12 +1148,20 @@ export default function App() {
             onAdd={() => setShowAddTeam(true)}
             onDelete={id => saveTeams(teams.filter(t => t.id !== id))}
             onEdit={team => setEditTeam(team)}
+            isEditorMode={isEditorMode}
           />
         )}
-        {tab === "finals" && <FinalsTab standings={standings} rounds={rounds} teams={teams} saveRounds={saveRounds} />}
+        {tab === "finals" && <FinalsTab standings={standings} rounds={rounds} teams={teams} saveRounds={saveRounds} isEditorMode={isEditorMode} />}
       </div>
 
       {/* Modals */}
+      {showPinModal && (
+        <PinModal
+          onClose={() => setShowPinModal(false)}
+          onUnlock={() => setIsEditorMode(true)}
+        />
+      )}
+
       {showAddTeam && (
         <AddTeamModal
           onClose={() => setShowAddTeam(false)}
