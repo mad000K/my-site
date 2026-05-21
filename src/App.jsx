@@ -492,18 +492,24 @@ function FullscreenLeaderboard({ standings, onClose, isEditorMode, onEditModeCli
 }
 
 // ─── Teams Tab ────────────────────────────────────────────────
-function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode }) {
+function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode, presentTeamIds, onTogglePresent, onSetAllPresent }) {
   const { isMobile } = useScreenSize();
   const standingsMap = {};
   standings.forEach((t, i) => { standingsMap[t.id] = { rank: i + 1, points: t.points }; });
+  const presentSet = new Set(presentTeamIds);
 
   return (
     <div className="fade-in">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         <SectionTitle icon="👥">Команди ({teams.length})</SectionTitle>
-        {isEditorMode && <Btn onClick={onAdd} small={isMobile}>
+        {isEditorMode && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Btn onClick={onSetAllPresent} small={isMobile} variant="outline" color={C.muted}>
+            <Check size={14} /> Усі присутні
+          </Btn>
+          <Btn onClick={onAdd} small={isMobile}>
           <Plus size={14} /> Додати
-        </Btn>}
+          </Btn>
+        </div>}
       </div>
 
       {teams.length === 0 ? (
@@ -515,13 +521,15 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode }) {
         <div className="teams-grid">
           {teams.map((team) => {
             const info = standingsMap[team.id];
+            const isPresent = presentSet.has(team.id);
             return (
-              <Card key={team.id} style={{ padding: "14px 16px", position: "relative" }}>
+              <Card key={team.id} style={{ padding: "14px 16px", position: "relative", opacity: isPresent ? 1 : 0.55 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <div style={{ width: 5, height: 52, borderRadius: 3, background: team.color, flexShrink: 0, marginTop: 2, boxShadow: `0 0 8px ${team.color}88` }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontFamily: "Russo One", fontSize: 14, color: C.text }}>{team.name}</span>
+                      <Badge color={isPresent ? "#22f977" : C.muted}>{isPresent ? "Присутня" : "Відсутня"}</Badge>
                       {info?.points > 0 && <Badge color={C.primary}>{info.points}б</Badge>}
                     </div>
                     <div style={{ fontSize: 12, color: "#fff", fontFamily: "Barlow", fontWeight: 700, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -532,6 +540,23 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode }) {
                     </div>
                   </div>
                   {isEditorMode && <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button
+                      className="bs-btn"
+                      onClick={() => onTogglePresent(team.id)}
+                      style={{
+                        background: isPresent ? "rgba(34,249,119,.12)" : "rgba(255,255,255,.06)",
+                        border: `1px solid ${isPresent ? "rgba(34,249,119,.35)" : "rgba(255,255,255,.14)"}`,
+                        borderRadius: 8,
+                        width: 30,
+                        height: 30,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      title={isPresent ? "Позначити відсутньою" : "Позначити присутньою"}
+                    >
+                      <Check size={12} color={isPresent ? "#22f977" : C.muted} />
+                    </button>
                     <button
                       className="bs-btn"
                       onClick={() => onEdit(team)}
@@ -554,12 +579,13 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode }) {
 }
 
 // ─── Rounds Tab ───────────────────────────────────────────────
-function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults, isEditorMode }) {
+function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, onEnterResults, isEditorMode }) {
   const [activeDay, setActiveDay] = useState(1);
   const { isMobile } = useScreenSize();
 
   const dayRounds = rounds.filter(r => r.day === activeDay);
-  const canGenerate = teams.length >= 2 && dayRounds.length < 3;
+  const presentCount = presentTeamIds.length;
+  const canGenerate = presentCount >= 2 && dayRounds.length < 3;
   const lobbyComplete = (lobby) => lobby.results && Object.keys(lobby.results).length === lobby.teamIds.length;
   const roundComplete = (round) => round.lobbies.every(lobbyComplete);
 
@@ -598,6 +624,7 @@ function RoundsTab({ rounds, teams, onGenerate, onDeleteRound, onEnterResults, i
       {/* Generate button */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         <SectionTitle icon="⚔️">Раунди — День {activeDay} ({dayRounds.length}/3)</SectionTitle>
+        <Badge color={presentCount >= 2 ? "#22f977" : C.pink}>Присутні: {presentCount}/{teams.length}</Badge>
         {isEditorMode && <Btn onClick={() => onGenerate(activeDay)} disabled={!canGenerate} color={DAY_COLORS[activeDay]} small={isMobile}>
           <Shuffle size={14} /> {isMobile ? "Генерувати" : "Генерувати раунд"}
         </Btn>}
@@ -1019,14 +1046,22 @@ export default function App() {
   const [editTeam, setEditTeam] = useState(null);
   const [isEditorMode, setIsEditorMode] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [presentTeamIds, setPresentTeamIds] = useState([]);
   const { isMobile } = useScreenSize();
 
   useEffect(() => {
     try {
       const savedTeams = localStorage.getItem("bs_t3");
       const savedRounds = localStorage.getItem("bs_r3");
-      setTeams(savedTeams ? JSON.parse(savedTeams) : DEFAULT_TEAMS);
+      const savedPresentTeamIds = localStorage.getItem("bs_present_t3");
+      const loadedTeams = savedTeams ? JSON.parse(savedTeams) : DEFAULT_TEAMS;
+      const loadedTeamIds = new Set(loadedTeams.map(t => t.id));
+      const loadedPresentTeamIds = savedPresentTeamIds
+        ? JSON.parse(savedPresentTeamIds).filter(id => loadedTeamIds.has(id))
+        : loadedTeams.map(t => t.id);
+      setTeams(loadedTeams);
       setRounds(savedRounds ? JSON.parse(savedRounds) : DEFAULT_ROUNDS);
+      setPresentTeamIds(loadedPresentTeamIds);
       
       const editorUnlocked = localStorage.getItem("bs_editor_unlocked") === "true";
       setIsEditorMode(editorUnlocked);
@@ -1034,6 +1069,7 @@ export default function App() {
     } catch (e) {
       setTeams(DEFAULT_TEAMS);
       setRounds(DEFAULT_ROUNDS);
+      setPresentTeamIds(DEFAULT_TEAMS.map(t => t.id));
     }
     setLoading(false);
   }, []);
@@ -1046,14 +1082,29 @@ export default function App() {
     setRounds(v);
     try { localStorage.setItem("bs_r3", JSON.stringify(v)); } catch (e) {}
   };
+  const savePresentTeamIds = (ids, validTeams = teams) => {
+    const validIds = new Set(validTeams.map(t => t.id));
+    const next = [...new Set(ids)].filter(id => validIds.has(id));
+    setPresentTeamIds(next);
+    try { localStorage.setItem("bs_present_t3", JSON.stringify(next)); } catch (e) {}
+  };
+  const togglePresent = (teamId) => {
+    savePresentTeamIds(
+      presentTeamIds.includes(teamId)
+        ? presentTeamIds.filter(id => id !== teamId)
+        : [...presentTeamIds, teamId]
+    );
+  };
 
   const standings = computeStandings(teams, rounds);
 
   const generateRound = (day) => {
     const dayRounds = rounds.filter(r => r.day === day);
     if (dayRounds.length >= 3) return;
+    const presentTeams = teams.filter(t => presentTeamIds.includes(t.id));
+    if (presentTeams.length < 2) { alert("Познач мінімум 2 присутні команди перед генерацією раунду."); return; }
     if (teams.length < 2) { alert("Потрібно мінімум 2 команди!"); return; }
-    const shuffled = shuffle(teams.map(t => t.id));
+    const shuffled = shuffle(presentTeams.map(t => t.id));
     const lobbies = [];
     for (let i = 0; i < shuffled.length; i += 5) {
       lobbies.push({ id: LOBBY_LABELS[lobbies.length] || `L${lobbies.length + 1}`, teamIds: shuffled.slice(i, i + 5), results: {} });
@@ -1188,7 +1239,7 @@ export default function App() {
         {tab === "leaderboard" && <LeaderboardTab standings={standings} rounds={rounds} setFullscreen={setFullscreen} />}
         {tab === "rounds" && (
           <RoundsTab
-            rounds={rounds} teams={teams}
+            rounds={rounds} teams={teams} presentTeamIds={presentTeamIds}
             onGenerate={generateRound}
             onDeleteRound={id => saveRounds(rounds.filter(r => r.id !== id))}
             onEnterResults={(roundId, lobbyIdx) => setEntryModal({ roundId, lobbyIdx })}
@@ -1199,9 +1250,16 @@ export default function App() {
           <TeamsTab
             teams={teams} standings={standings}
             onAdd={() => setShowAddTeam(true)}
-            onDelete={id => saveTeams(teams.filter(t => t.id !== id))}
+            onDelete={id => {
+              const nextTeams = teams.filter(t => t.id !== id);
+              saveTeams(nextTeams);
+              savePresentTeamIds(presentTeamIds.filter(tid => tid !== id), nextTeams);
+            }}
             onEdit={team => setEditTeam(team)}
             isEditorMode={isEditorMode}
+            presentTeamIds={presentTeamIds}
+            onTogglePresent={togglePresent}
+            onSetAllPresent={() => savePresentTeamIds(teams.map(t => t.id))}
           />
         )}
         {tab === "finals" && <FinalsTab standings={standings} rounds={rounds} teams={teams} saveRounds={saveRounds} isEditorMode={isEditorMode} />}
@@ -1219,7 +1277,10 @@ export default function App() {
         <AddTeamModal
           onClose={() => setShowAddTeam(false)}
           onSave={team => {
-            saveTeams([...teams, { ...team, id: Date.now(), color: TEAM_COLORS[teams.length % TEAM_COLORS.length] }]);
+            const newTeam = { ...team, id: Date.now(), color: TEAM_COLORS[teams.length % TEAM_COLORS.length] };
+            const nextTeams = [...teams, newTeam];
+            saveTeams(nextTeams);
+            savePresentTeamIds([...presentTeamIds, newTeam.id], nextTeams);
             setShowAddTeam(false);
           }}
         />
