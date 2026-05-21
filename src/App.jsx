@@ -9,6 +9,45 @@ const DEFAULT_TEAMS = [{"name":"Пивні Кіборги ","player1":"Дишл�
 
 const DEFAULT_ROUNDS = [{"id":1778756416209,"day":1,"roundNum":1,"lobbies":[{"id":"A","teamIds":[1778754946904,1778755101008,1778745106703,1778754823864,1778744964447],"results":{"1778754946904":{"placement":2,"kills":3},"1778755101008":{"placement":1,"kills":7},"1778745106703":{"placement":4,"kills":0},"1778754823864":{"placement":3,"kills":2},"1778744964447":{"placement":5,"kills":0}}},{"id":"B","teamIds":[1778754851560,1778755146361,1778755193304,1778745140879,1778755640640],"results":{"1778754851560":{"placement":5,"kills":1},"1778755146361":{"placement":4,"kills":1},"1778755193304":{"placement":2,"kills":0},"1778745140879":{"placement":1,"kills":6},"1778755640640":{"placement":3,"kills":2}}},{"id":"C","teamIds":[1778754736449,1778744861855,1778745060568,1778745083071,1778745004863],"results":{"1778754736449":{"placement":1,"kills":3},"1778744861855":{"placement":4,"kills":0},"1778745060568":{"placement":5,"kills":1},"1778745083071":{"placement":2,"kills":6},"1778745004863":{"placement":3,"kills":3}}},{"id":"L4","teamIds":[1778744515616,1778754989664,1778745028175,1778755029752,1778754685072],"results":{"1778744515616":{"placement":3,"kills":2},"1778754989664":{"placement":2,"kills":6},"1778745028175":{"placement":1,"kills":4},"1778755029752":{"placement":4,"kills":1},"1778754685072":{"placement":5,"kills":0}}}]}];
 
+const DAY2_ADDITIONAL_TEAMS = [
+  { name: "забивні", player1: "", player2: "", sub: "", id: 1778760000001, color: "#22f977" },
+  { name: "барбосіки", player1: "", player2: "", sub: "", id: 1778760000002, color: "#f95252" },
+  { name: "Тіні Києва", player1: "", player2: "", sub: "", id: 1778760000003, color: "#c5f922" },
+];
+
+const DAY2_ROUNDS = [
+  {
+    id: 1778761000001,
+    day: 2,
+    roundNum: 1,
+    lobbies: [
+      { id: "A", teamIds: [1778744861855, 1778754685072, 1778760000001, 1778745140879], results: { "1778744861855": { placement: 2, kills: 4 }, "1778754685072": { placement: 1, kills: 4 }, "1778760000001": { placement: 4, kills: 0 }, "1778745140879": { placement: 3, kills: 0 } } },
+      { id: "B", teamIds: [1778744515616, 1778754946904, 1778760000002, 1778744964447], results: { "1778744515616": { placement: 2, kills: 2 }, "1778754946904": { placement: 1, kills: 7 }, "1778760000002": { placement: 5, kills: 1 }, "1778744964447": { placement: 4, kills: 0 } } },
+      { id: "C", teamIds: [1778745004863, 1778760000003, 1778755101008, 1778745028175], results: { "1778745004863": { placement: 4, kills: 0 }, "1778760000003": { placement: 3, kills: 1 }, "1778755101008": { placement: 2, kills: 5 }, "1778745028175": { placement: 1, kills: 4 } } },
+    ],
+  },
+  {
+    id: 1778761000002,
+    day: 2,
+    roundNum: 2,
+    lobbies: [
+      { id: "A", teamIds: [1778744515616, 1778755101008, 1778744861855, 1778760000001], results: { "1778744515616": { placement: 4, kills: 1 }, "1778755101008": { placement: 1, kills: 5 }, "1778744861855": { placement: 2, kills: 4 }, "1778760000001": { placement: 3, kills: 1 } } },
+      { id: "B", teamIds: [1778754946904, 1778745004863, 1778754685072, 1778745028175], results: { "1778754946904": { placement: 1, kills: 3 }, "1778745004863": { placement: 3, kills: 0 }, "1778754685072": { placement: 2, kills: 4 }, "1778745028175": { placement: 4, kills: 0 } } },
+      { id: "C", teamIds: [1778744964447, 1778760000003, 1778760000002, 1778745140879], results: { "1778744964447": { placement: 4, kills: 0 }, "1778760000003": { placement: 2, kills: 4 }, "1778760000002": { placement: 1, kills: 2 }, "1778745140879": { placement: 3, kills: 1 } } },
+    ],
+  },
+  {
+    id: 1778761000003,
+    day: 2,
+    roundNum: 3,
+    lobbies: [
+      { id: "A", teamIds: [1778760000002, 1778755101008, 1778754946904, 1778745004863], results: { "1778760000002": { placement: 3, kills: 0 }, "1778755101008": { placement: 1, kills: 7 }, "1778754946904": { placement: 4, kills: 0 }, "1778745004863": { placement: 2, kills: 1 } } },
+      { id: "B", teamIds: [1778744515616, 1778754685072, 1778745140879, 1778744861855], results: { "1778744515616": { placement: 2, kills: 3 }, "1778754685072": { placement: 3, kills: 3 }, "1778745140879": { placement: 4, kills: 1 }, "1778744861855": { placement: 1, kills: 2 } } },
+      { id: "C", teamIds: [1778744964447, 1778744515616, 1778760000001, 1778745028175], results: { "1778744964447": { placement: 2, kills: 2 }, "1778744515616": { placement: 4, kills: 0 }, "1778760000001": { placement: 3, kills: 0 }, "1778745028175": { placement: 1, kills: 5 } } },
+    ],
+  },
+];
+
 // ─── Constants ────────────────────────────────────────────────
 const EDITOR_PIN = "525533";
 const PLACEMENT_PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 1 };
@@ -1054,22 +1093,35 @@ export default function App() {
       const savedTeams = localStorage.getItem("bs_t3");
       const savedRounds = localStorage.getItem("bs_r3");
       const savedPresentTeamIds = localStorage.getItem("bs_present_t3");
-      const loadedTeams = savedTeams ? JSON.parse(savedTeams) : DEFAULT_TEAMS;
+      const savedTeamsList = savedTeams ? JSON.parse(savedTeams) : DEFAULT_TEAMS;
+      const loadedTeams = [
+        ...savedTeamsList,
+        ...DAY2_ADDITIONAL_TEAMS.filter(team => !savedTeamsList.some(saved => saved.id === team.id)),
+      ];
+      const savedRoundsList = savedRounds ? JSON.parse(savedRounds) : DEFAULT_ROUNDS;
+      const loadedRounds = [
+        ...savedRoundsList.filter(round => !(round.day === 2 && DAY2_ROUNDS.some(day2Round => day2Round.roundNum === round.roundNum))),
+        ...DAY2_ROUNDS,
+      ];
       const loadedTeamIds = new Set(loadedTeams.map(t => t.id));
-      const loadedPresentTeamIds = savedPresentTeamIds
-        ? JSON.parse(savedPresentTeamIds).filter(id => loadedTeamIds.has(id))
-        : loadedTeams.map(t => t.id);
+      const loadedPresentTeamIds = [...new Set(savedPresentTeamIds
+        ? [
+            ...JSON.parse(savedPresentTeamIds).filter(id => loadedTeamIds.has(id)),
+            ...DAY2_ADDITIONAL_TEAMS.map(t => t.id),
+          ]
+        : loadedTeams.map(t => t.id))];
       setTeams(loadedTeams);
-      setRounds(savedRounds ? JSON.parse(savedRounds) : DEFAULT_ROUNDS);
+      setRounds(loadedRounds);
       setPresentTeamIds(loadedPresentTeamIds);
       
       const editorUnlocked = localStorage.getItem("bs_editor_unlocked") === "true";
       setIsEditorMode(editorUnlocked);
       console.log("App loaded, isEditorMode:", editorUnlocked);
     } catch (e) {
-      setTeams(DEFAULT_TEAMS);
-      setRounds(DEFAULT_ROUNDS);
-      setPresentTeamIds(DEFAULT_TEAMS.map(t => t.id));
+      const fallbackTeams = [...DEFAULT_TEAMS, ...DAY2_ADDITIONAL_TEAMS];
+      setTeams(fallbackTeams);
+      setRounds([...DEFAULT_ROUNDS, ...DAY2_ROUNDS]);
+      setPresentTeamIds(fallbackTeams.map(t => t.id));
     }
     setLoading(false);
   }, []);
