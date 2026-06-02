@@ -59,6 +59,10 @@ const TEAM_COLORS = [
 ];
 const DAY_COLORS = { 1: "#f9c522", 2: "#ff8c00", 3: "#e84393" };
 
+function getDayColor(day) {
+  return DAY_COLORS[day] || TEAM_COLORS[(Number(day) - 1) % TEAM_COLORS.length] || "#f9c522";
+}
+
 // ─── Responsive Hook ──────────────────────────────────────────
 function useScreenSize() {
   const [width, setWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
@@ -620,29 +624,52 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode, pre
 // ─── Rounds Tab ───────────────────────────────────────────────
 function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, onEnterResults, isEditorMode }) {
   const [activeDay, setActiveDay] = useState(1);
+  const [manualDays, setManualDays] = useState([]);
   const { isMobile } = useScreenSize();
 
-  const dayRounds = rounds.filter(r => r.day === activeDay);
+  const competitionDays = [...new Set([1, activeDay, ...rounds.filter(r => !r.isFinal).map(r => r.day), ...manualDays])]
+    .sort((a, b) => a - b);
+  const activeDayColor = getDayColor(activeDay);
+  const dayRounds = rounds.filter(r => r.day === activeDay && !r.isFinal);
   const presentCount = presentTeamIds.length;
-  const canGenerate = presentCount >= 2 && dayRounds.length < 3;
+  const canGenerate = presentCount >= 2;
   const lobbyComplete = (lobby) => lobby.results && Object.keys(lobby.results).length === lobby.teamIds.length;
   const roundComplete = (round) => round.lobbies.every(lobbyComplete);
-
+  const addCompetitionDay = () => {
+    const nextDay = Math.max(0, ...competitionDays) + 1;
+    setManualDays(prev => prev.includes(nextDay) ? prev : [...prev, nextDay]);
+    setActiveDay(nextDay);
+  };
   return (
     <div className="fade-in">
       {/* Day selector */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        {[1, 2].map(d => (
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {competitionDays.map(d => {
+          const dayColor = getDayColor(d);
+          return (
           <button key={d} className="tab-btn bs-btn" onClick={() => setActiveDay(d)} style={{
-            background: activeDay === d ? DAY_COLORS[d] : "rgba(255,255,255,.05)",
+            background: activeDay === d ? dayColor : "rgba(255,255,255,.05)",
             color: activeDay === d ? "#0a0a1a" : C.muted,
-            border: `1px solid ${activeDay === d ? DAY_COLORS[d] : C.border}`,
+            border: `1px solid ${activeDay === d ? dayColor : C.border}`,
             borderRadius: 100, padding: "8px 20px",
             fontFamily: "Russo One", fontSize: 13,
           }}>
             День {d}
           </button>
-        ))}
+          );
+        })}
+        {isEditorMode && (
+          <button className="tab-btn bs-btn" onClick={addCompetitionDay} style={{
+            background: "rgba(34,249,119,.08)",
+            color: "#22f977",
+            border: "1px solid rgba(34,249,119,.28)",
+            borderRadius: 100, padding: "8px 16px",
+            fontFamily: "Russo One", fontSize: 13,
+            display: "inline-flex", alignItems: "center", gap: 6,
+          }}>
+            <Plus size={14} /> День
+          </button>
+        )}
       </div>
 
       {/* Scoring legend */}
@@ -662,9 +689,9 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
 
       {/* Generate button */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-        <SectionTitle icon="⚔️">Раунди — День {activeDay} ({dayRounds.length}/3)</SectionTitle>
+        <SectionTitle icon="⚔️">Раунди — День {activeDay} ({dayRounds.length})</SectionTitle>
         <Badge color={presentCount >= 2 ? "#22f977" : C.pink}>Присутні: {presentCount}/{teams.length}</Badge>
-        {isEditorMode && <Btn onClick={() => onGenerate(activeDay)} disabled={!canGenerate} color={DAY_COLORS[activeDay]} small={isMobile}>
+        {isEditorMode && <Btn onClick={() => onGenerate(activeDay)} disabled={!canGenerate} color={activeDayColor} small={isMobile}>
           <Shuffle size={14} /> {isMobile ? "Генерувати" : "Генерувати раунд"}
         </Btn>}
       </div>
@@ -680,9 +707,9 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
           {dayRounds.map((round) => (
             <Card key={round.id} style={{ padding: 0, overflow: "hidden" }}>
               {/* Round header */}
-              <div style={{ background: `linear-gradient(135deg,${DAY_COLORS[round.day]}22,transparent)`, borderBottom: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ background: `linear-gradient(135deg,${getDayColor(round.day)}22,transparent)`, borderBottom: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: DAY_COLORS[round.day], display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Russo One", fontSize: 16, color: "#0a0a1a", flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: getDayColor(round.day), display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Russo One", fontSize: 16, color: "#0a0a1a", flexShrink: 0 }}>
                     {round.roundNum}
                   </div>
                   <div>
@@ -752,7 +779,7 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
 function FinalsTab({ standings, rounds, teams, saveRounds, isEditorMode }) {
   const [topN, setTopN] = useState(10);
   const { isMobile } = useScreenSize();
-  const finalsRounds = rounds.filter(r => r.day === 3);
+  const finalsRounds = rounds.filter(r => r.isFinal);
   const topTeams = standings.slice(0, topN);
 
   const generateFinals = () => {
@@ -1151,8 +1178,7 @@ export default function App() {
   const standings = computeStandings(teams, rounds);
 
   const generateRound = (day) => {
-    const dayRounds = rounds.filter(r => r.day === day);
-    if (dayRounds.length >= 3) return;
+    const dayRounds = rounds.filter(r => r.day === day && !r.isFinal);
     const presentTeams = teams.filter(t => presentTeamIds.includes(t.id));
     if (presentTeams.length < 2) { alert("Познач мінімум 2 присутні команди перед генерацією раунду."); return; }
     if (teams.length < 2) { alert("Потрібно мінімум 2 команди!"); return; }
