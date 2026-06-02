@@ -48,6 +48,36 @@ const DAY2_ROUNDS = [
   },
 ];
 
+const DAY3_ROUNDS = [
+  {
+    id: 1778762000001,
+    day: 3,
+    roundNum: 1,
+    lobbies: [
+      {
+        id: "A",
+        teamIds: [1778754685072, 1778745140879, 1778755029752, 1778745060568],
+        results: {
+          "1778754685072": { placement: 1, kills: 5 },
+          "1778745140879": { placement: 3, kills: 1 },
+          "1778755029752": { placement: 2, kills: 3 },
+          "1778745060568": { placement: 4, kills: 0 },
+        },
+      },
+      {
+        id: "B",
+        teamIds: [1778755101008, 1778745028175, 1778754946904, 1778744964447],
+        results: {
+          "1778755101008": { placement: 1, kills: 6 },
+          "1778745028175": { placement: 2, kills: 0 },
+          "1778754946904": { placement: 3, kills: 2 },
+          "1778744964447": { placement: 4, kills: 1 },
+        },
+      },
+    ],
+  },
+];
+
 // ─── Constants ────────────────────────────────────────────────
 const EDITOR_PIN = "525533";
 const PLACEMENT_PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 1 };
@@ -73,9 +103,17 @@ function normalizeState(state = {}) {
   const teams = Array.isArray(state.teams)
     ? state.teams
     : [...DEFAULT_TEAMS, ...DAY2_ADDITIONAL_TEAMS];
-  const rounds = Array.isArray(state.rounds)
+  const savedRounds = Array.isArray(state.rounds)
     ? state.rounds
     : [...DEFAULT_ROUNDS, ...DAY2_ROUNDS];
+  const seededRounds = [...savedRounds];
+  DAY3_ROUNDS.forEach(seedRound => {
+    const alreadyExists = seededRounds.some(round =>
+      !round.isFinal && round.day === seedRound.day && round.roundNum === seedRound.roundNum
+    );
+    if (!alreadyExists) seededRounds.push(seedRound);
+  });
+  const rounds = seededRounds;
   const loadedTeamIds = new Set(teams.map(t => t.id));
   const presentTeamIds = [...new Set(Array.isArray(state.presentTeamIds)
     ? state.presentTeamIds.filter(id => loadedTeamIds.has(id))
