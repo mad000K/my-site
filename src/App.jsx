@@ -58,9 +58,75 @@ const TEAM_COLORS = [
   "#f922c5","#22f9c5","#aef922","#9922f9","#f97722",
 ];
 const DAY_COLORS = { 1: "#f9c522", 2: "#ff8c00", 3: "#e84393" };
+const SHARED_STATE_KEY = "bs_shared_state_v1";
+const LEGACY_STORAGE_KEYS = {
+  teams: "bs_t3",
+  rounds: "bs_r3",
+  presentTeamIds: "bs_present_t3",
+};
 
 function getDayColor(day) {
   return DAY_COLORS[day] || TEAM_COLORS[(Number(day) - 1) % TEAM_COLORS.length] || "#f9c522";
+}
+
+function normalizeState(state = {}) {
+  const teams = Array.isArray(state.teams)
+    ? state.teams
+    : [...DEFAULT_TEAMS, ...DAY2_ADDITIONAL_TEAMS];
+  const rounds = Array.isArray(state.rounds)
+    ? state.rounds
+    : [...DEFAULT_ROUNDS, ...DAY2_ROUNDS];
+  const loadedTeamIds = new Set(teams.map(t => t.id));
+  const presentTeamIds = [...new Set(Array.isArray(state.presentTeamIds)
+    ? state.presentTeamIds.filter(id => loadedTeamIds.has(id))
+    : teams.map(t => t.id))];
+
+  return {
+    teams,
+    rounds,
+    presentTeamIds,
+    updatedAt: state.updatedAt || 0,
+  };
+}
+
+function readLocalState() {
+  try {
+    const shared = localStorage.getItem(SHARED_STATE_KEY);
+    if (shared) return normalizeState(JSON.parse(shared));
+
+    return normalizeState({
+      teams: JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEYS.teams) || "null"),
+      rounds: JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEYS.rounds) || "null"),
+      presentTeamIds: JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEYS.presentTeamIds) || "null"),
+    });
+  } catch (e) {
+    return normalizeState();
+  }
+}
+
+function writeLocalState(state) {
+  try {
+    localStorage.setItem(SHARED_STATE_KEY, JSON.stringify(state));
+    localStorage.setItem(LEGACY_STORAGE_KEYS.teams, JSON.stringify(state.teams));
+    localStorage.setItem(LEGACY_STORAGE_KEYS.rounds, JSON.stringify(state.rounds));
+    localStorage.setItem(LEGACY_STORAGE_KEYS.presentTeamIds, JSON.stringify(state.presentTeamIds));
+  } catch (e) {}
+}
+
+async function fetchSharedState() {
+  const response = await fetch("/api/state", { cache: "no-store" });
+  if (!response.ok) return null;
+  return response.json();
+}
+
+async function saveSharedState(state) {
+  const response = await fetch("/api/state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(state),
+  });
+  if (!response.ok) return null;
+  return response.json();
 }
 
 // ─── Responsive Hook ──────────────────────────────────────────
@@ -1113,59 +1179,80 @@ export default function App() {
   const [isEditorMode, setIsEditorMode] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [presentTeamIds, setPresentTeamIds] = useState([]);
+  const [lastSyncedAt, setLastSyncedAt] = useState(0);
   const { isMobile } = useScreenSize();
 
+  const applyTournamentState = (state) => {
+    const normalized = normalizeState(state);
+    setTeams(normalized.teams);
+    setRounds(normalized.rounds);
+    setPresentTeamIds(normalized.presentTeamIds);
+    setLastSyncedAt(normalized.updatedAt || Date.now());
+    writeLocalState(normalized);
+    return normalized;
+  };
+
+  const persistTournamentState = (nextState) => {
+    const localState = {
+      ...nextState,
+      updatedAt: Date.now(),
+    };
+    const normalized = applyTournamentState(localState);
+
+    saveSharedState(normalized)
+      .then(serverState => {
+        if (serverState) applyTournamentState(serverState);
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
-    try {
-      const savedTeams = localStorage.getItem("bs_t3");
-      const savedRounds = localStorage.getItem("bs_r3");
-      const savedPresentTeamIds = localStorage.getItem("bs_present_t3");
-      const savedTeamsList = savedTeams ? JSON.parse(savedTeams) : DEFAULT_TEAMS;
-      const loadedTeams = [
-        ...savedTeamsList,
-        ...DAY2_ADDITIONAL_TEAMS.filter(team => !savedTeamsList.some(saved => saved.id === team.id)),
-      ];
-      const savedRoundsList = savedRounds ? JSON.parse(savedRounds) : DEFAULT_ROUNDS;
-      const loadedRounds = [
-        ...savedRoundsList.filter(round => !(round.day === 2 && DAY2_ROUNDS.some(day2Round => day2Round.roundNum === round.roundNum))),
-        ...DAY2_ROUNDS,
-      ];
-      const loadedTeamIds = new Set(loadedTeams.map(t => t.id));
-      const loadedPresentTeamIds = [...new Set(savedPresentTeamIds
-        ? [
-            ...JSON.parse(savedPresentTeamIds).filter(id => loadedTeamIds.has(id)),
-            ...DAY2_ADDITIONAL_TEAMS.map(t => t.id),
-          ]
-        : loadedTeams.map(t => t.id))];
-      setTeams(loadedTeams);
-      setRounds(loadedRounds);
-      setPresentTeamIds(loadedPresentTeamIds);
-      
-      const editorUnlocked = localStorage.getItem("bs_editor_unlocked") === "true";
-      setIsEditorMode(editorUnlocked);
-      console.log("App loaded, isEditorMode:", editorUnlocked);
-    } catch (e) {
-      const fallbackTeams = [...DEFAULT_TEAMS, ...DAY2_ADDITIONAL_TEAMS];
-      setTeams(fallbackTeams);
-      setRounds([...DEFAULT_ROUNDS, ...DAY2_ROUNDS]);
-      setPresentTeamIds(fallbackTeams.map(t => t.id));
-    }
+    const localState = applyTournamentState(readLocalState());
+    const editorUnlocked = localStorage.getItem("bs_editor_unlocked") === "true";
+    setIsEditorMode(editorUnlocked);
     setLoading(false);
+
+    fetchSharedState()
+      .then(sharedState => {
+        if (sharedState) {
+          applyTournamentState(sharedState);
+        } else {
+          saveSharedState(localState).then(serverState => {
+            if (serverState) applyTournamentState(serverState);
+          });
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (loading || isEditorMode) return;
+
+    const interval = setInterval(() => {
+      fetchSharedState()
+        .then(sharedState => {
+          if (sharedState?.updatedAt && sharedState.updatedAt > lastSyncedAt) {
+            applyTournamentState(sharedState);
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isEditorMode, lastSyncedAt]);
+
   const saveTeams = (v) => {
-    setTeams(v);
-    try { localStorage.setItem("bs_t3", JSON.stringify(v)); } catch (e) {}
+    persistTournamentState({ teams: v, rounds, presentTeamIds });
   };
   const saveRounds = (v) => {
-    setRounds(v);
-    try { localStorage.setItem("bs_r3", JSON.stringify(v)); } catch (e) {}
+    persistTournamentState({ teams, rounds: v, presentTeamIds });
   };
   const savePresentTeamIds = (ids, validTeams = teams) => {
     const validIds = new Set(validTeams.map(t => t.id));
     const next = [...new Set(ids)].filter(id => validIds.has(id));
-    setPresentTeamIds(next);
-    try { localStorage.setItem("bs_present_t3", JSON.stringify(next)); } catch (e) {}
+    persistTournamentState({ teams: validTeams, rounds, presentTeamIds: next });
   };
   const togglePresent = (teamId) => {
     savePresentTeamIds(
