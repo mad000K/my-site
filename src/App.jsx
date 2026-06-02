@@ -51,7 +51,7 @@ const DAY2_ROUNDS = [
 // ─── Constants ────────────────────────────────────────────────
 const EDITOR_PIN = "525533";
 const PLACEMENT_PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 1 };
-const LOBBY_LABELS = ["A", "B", "C"];
+const LOBBY_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const TEAM_COLORS = [
   "#f9c522","#ff8c00","#e84393","#9b1fde","#22c5f9",
   "#22f977","#f95252","#c5f922","#f9a522","#2254f9",
