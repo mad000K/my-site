@@ -809,32 +809,14 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode, pre
 }
 
 // ─── Rounds Tab ───────────────────────────────────────────────
-function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, onEnterResults, isEditorMode }) {
+function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, onEnterResults, onUpdateRounds, isEditorMode }) {
   const [activeDay, setActiveDay] = useState(1);
   const [manualDays, setManualDays] = useState([]);
   const [draggedTeam, setDraggedTeam] = useState(null);
-  const [modifiedRounds, setModifiedRounds] = useState([]);
   const { isMobile } = useScreenSize();
 
-  const getActiveRounds = () => modifiedRounds.length > 0 ? modifiedRounds : rounds;
-
-  const competitionDays = [...new Set([1, activeDay, ...getActiveRounds().filter(r => !r.isFinal).map(r => r.day), ...manualDays])]
-    .sort((a, b) => a - b);
-  const activeDayColor = getDayColor(activeDay);
-  const dayRounds = getActiveRounds().filter(r => r.day === activeDay && !r.isFinal);
-  const presentCount = presentTeamIds.length;
-  const canGenerate = presentCount >= 2;
-  const lobbyComplete = (lobby) => lobby.results && Object.keys(lobby.results).length === lobby.teamIds.length;
-  const roundComplete = (round) => round.lobbies.every(lobbyComplete);
-  const addCompetitionDay = () => {
-    const nextDay = Math.max(0, ...competitionDays) + 1;
-    setManualDays(prev => prev.includes(nextDay) ? prev : [...prev, nextDay]);
-    setActiveDay(nextDay);
-  };
-
   const reorderTeamInLobby = (roundId, lobbyId, fromIndex, toIndex) => {
-    const activeRounds = getActiveRounds();
-    const newRounds = activeRounds.map(r => {
+    const newRounds = rounds.map(r => {
       if (r.id === roundId) {
         return {
           ...r,
@@ -851,12 +833,11 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
       }
       return r;
     });
-    setModifiedRounds(newRounds);
+    onUpdateRounds(newRounds);
   };
 
   const moveTeamBetweenLobbies = (roundId, fromLobbyId, toLobbyId, teamId) => {
-    const activeRounds = getActiveRounds();
-    const newRounds = activeRounds.map(r => {
+    const newRounds = rounds.map(r => {
       if (r.id === roundId) {
         return {
           ...r,
@@ -873,10 +854,23 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
       }
       return r;
     });
-    setModifiedRounds(newRounds);
+    onUpdateRounds(newRounds);
     setDraggedTeam(null);
   };
 
+  const competitionDays = [...new Set([1, activeDay, ...rounds.filter(r => !r.isFinal).map(r => r.day), ...manualDays])]
+    .sort((a, b) => a - b);
+  const activeDayColor = getDayColor(activeDay);
+  const dayRounds = rounds.filter(r => r.day === activeDay && !r.isFinal);
+  const presentCount = presentTeamIds.length;
+  const canGenerate = presentCount >= 2;
+  const lobbyComplete = (lobby) => lobby.results && Object.keys(lobby.results).length === lobby.teamIds.length;
+  const roundComplete = (round) => round.lobbies.every(lobbyComplete);
+  const addCompetitionDay = () => {
+    const nextDay = Math.max(0, ...competitionDays) + 1;
+    setManualDays(prev => prev.includes(nextDay) ? prev : [...prev, nextDay]);
+    setActiveDay(nextDay);
+  };
   return (
     <div className="fade-in">
       {/* Day selector */}
@@ -972,7 +966,7 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
                     <div
                       key={li}
                       className={isEditorMode ? "bs-btn lobby-cell" : "lobby-cell"}
-                      onClick={() => isEditorMode && onEnterResults(round.id, li)}
+                      onClick={() => isEditorMode && onEnterResults(round.id, lobby.id, li)}
                       onDragOver={(e) => {
                         e.preventDefault();
                         if (isEditorMode && draggedTeam) {
@@ -1643,7 +1637,8 @@ export default function App() {
             rounds={rounds} teams={teams} presentTeamIds={presentTeamIds}
             onGenerate={generateRound}
             onDeleteRound={id => saveRounds(rounds.filter(r => r.id !== id))}
-            onEnterResults={(roundId, lobbyIdx) => setEntryModal({ roundId, lobbyIdx })}
+            onEnterResults={(roundId, lobbyId, lobbyIdx) => setEntryModal({ roundId, lobbyId, lobbyIdx })}
+            onUpdateRounds={saveRounds}
             isEditorMode={isEditorMode}
           />
         )}
@@ -1689,14 +1684,19 @@ export default function App() {
 
       {entryModal && (() => {
         const round = rounds.find(r => r.id === entryModal.roundId);
-        const lobby = round?.lobbies[entryModal.lobbyIdx];
+        const lobbyIdx = entryModal.lobbyId != null
+          ? round?.lobbies.findIndex(l => l.id === entryModal.lobbyId)
+          : entryModal.lobbyIdx;
+        const resolvedIdx = (lobbyIdx != null && lobbyIdx >= 0) ? lobbyIdx : entryModal.lobbyIdx;
+        const lobby = round?.lobbies[resolvedIdx];
         if (!round || !lobby) return null;
         return (
           <ResultsModal
-            round={round} lobby={lobby} lobbyIdx={entryModal.lobbyIdx}
+            key={`${entryModal.roundId}-${entryModal.lobbyId ?? entryModal.lobbyIdx}`}
+            round={round} lobby={lobby} lobbyIdx={resolvedIdx}
             teams={teams}
             onClose={() => setEntryModal(null)}
-            onSave={results => saveResults(entryModal.roundId, entryModal.lobbyIdx, results)}
+            onSave={results => saveResults(entryModal.roundId, resolvedIdx, results)}
           />
         );
       })()}
