@@ -812,12 +812,16 @@ function TeamsTab({ teams, standings, onAdd, onDelete, onEdit, isEditorMode, pre
 function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, onEnterResults, isEditorMode }) {
   const [activeDay, setActiveDay] = useState(1);
   const [manualDays, setManualDays] = useState([]);
+  const [draggedTeam, setDraggedTeam] = useState(null);
+  const [modifiedRounds, setModifiedRounds] = useState([]);
   const { isMobile } = useScreenSize();
 
-  const competitionDays = [...new Set([1, activeDay, ...rounds.filter(r => !r.isFinal).map(r => r.day), ...manualDays])]
+  const getActiveRounds = () => modifiedRounds.length > 0 ? modifiedRounds : rounds;
+
+  const competitionDays = [...new Set([1, activeDay, ...getActiveRounds().filter(r => !r.isFinal).map(r => r.day), ...manualDays])]
     .sort((a, b) => a - b);
   const activeDayColor = getDayColor(activeDay);
-  const dayRounds = rounds.filter(r => r.day === activeDay && !r.isFinal);
+  const dayRounds = getActiveRounds().filter(r => r.day === activeDay && !r.isFinal);
   const presentCount = presentTeamIds.length;
   const canGenerate = presentCount >= 2;
   const lobbyComplete = (lobby) => lobby.results && Object.keys(lobby.results).length === lobby.teamIds.length;
@@ -827,6 +831,52 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
     setManualDays(prev => prev.includes(nextDay) ? prev : [...prev, nextDay]);
     setActiveDay(nextDay);
   };
+
+  const reorderTeamInLobby = (roundId, lobbyId, fromIndex, toIndex) => {
+    const activeRounds = getActiveRounds();
+    const newRounds = activeRounds.map(r => {
+      if (r.id === roundId) {
+        return {
+          ...r,
+          lobbies: r.lobbies.map(l => {
+            if (l.id === lobbyId) {
+              const newTeamIds = [...l.teamIds];
+              const [removed] = newTeamIds.splice(fromIndex, 1);
+              newTeamIds.splice(toIndex, 0, removed);
+              return { ...l, teamIds: newTeamIds };
+            }
+            return l;
+          })
+        };
+      }
+      return r;
+    });
+    setModifiedRounds(newRounds);
+  };
+
+  const moveTeamBetweenLobbies = (roundId, fromLobbyId, toLobbyId, teamId) => {
+    const activeRounds = getActiveRounds();
+    const newRounds = activeRounds.map(r => {
+      if (r.id === roundId) {
+        return {
+          ...r,
+          lobbies: r.lobbies.map(l => {
+            if (l.id === fromLobbyId) {
+              return { ...l, teamIds: l.teamIds.filter(tid => tid !== teamId) };
+            }
+            if (l.id === toLobbyId && !l.teamIds.includes(teamId)) {
+              return { ...l, teamIds: [...l.teamIds, teamId] };
+            }
+            return l;
+          })
+        };
+      }
+      return r;
+    });
+    setModifiedRounds(newRounds);
+    setDraggedTeam(null);
+  };
+
   return (
     <div className="fade-in">
       {/* Day selector */}
@@ -919,11 +969,37 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
                 {round.lobbies.map((lobby, li) => {
                   const complete = lobbyComplete(lobby);
                   return (
-                    <div key={li} className={isEditorMode ? "bs-btn lobby-cell" : "lobby-cell"} onClick={() => isEditorMode && onEnterResults(round.id, li)} style={{
-                      background: complete ? "rgba(34,249,119,.03)" : "transparent",
-                      cursor: isEditorMode ? "pointer" : "default",
-                      opacity: isEditorMode ? 1 : 0.9,
-                    }}>
+                    <div
+                      key={li}
+                      className={isEditorMode ? "bs-btn lobby-cell" : "lobby-cell"}
+                      onClick={() => isEditorMode && onEnterResults(round.id, li)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (isEditorMode && draggedTeam) {
+                          e.currentTarget.style.background = "rgba(34,249,119,.1)";
+                          e.currentTarget.style.borderColor = "rgba(34,249,119,.3)";
+                        }
+                      }}
+                      onDragLeave={(e) => {
+                        e.currentTarget.style.background = complete ? "rgba(34,249,119,.03)" : "transparent";
+                        e.currentTarget.style.borderColor = "transparent";
+                      }}
+                      onDrop={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        e.currentTarget.style.background = complete ? "rgba(34,249,119,.03)" : "transparent";
+                        e.currentTarget.style.borderColor = "transparent";
+                        if (isEditorMode && draggedTeam && draggedTeam.roundId === round.id && draggedTeam.lobbyId !== lobby.id) {
+                          moveTeamBetweenLobbies(round.id, draggedTeam.lobbyId, lobby.id, draggedTeam.teamId);
+                        }
+                      }}
+                      style={{
+                        background: draggedTeam?.roundId === round.id && draggedTeam?.lobbyId === lobby.id ? "rgba(34,249,119,.1)" : complete ? "rgba(34,249,119,.03)" : "transparent",
+                        cursor: isEditorMode ? "pointer" : "default",
+                        opacity: isEditorMode ? 1 : 0.9,
+                        border: "1px solid transparent",
+                        transition: "all 0.2s",
+                      }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                         <span style={{ fontFamily: "Russo One", fontSize: 13, color: complete ? "#22f977" : C.primary }}>
                           Лобі {LOBBY_LABELS[li]}
@@ -931,19 +1007,58 @@ function RoundsTab({ rounds, teams, presentTeamIds, onGenerate, onDeleteRound, o
                         {complete ? <Check size={13} color="#22f977" /> : <Zap size={13} color={C.muted} />}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                        {lobby.teamIds.map(tid => {
+                        {lobby.teamIds.map((tid, teamIndex) => {
                           const team = teams.find(t => t.id === tid);
                           const res = lobby.results?.[tid];
                           return (
-                            <div key={tid} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                            <div
+                              key={tid}
+                              draggable={isEditorMode}
+                              onDragStart={(e) => {
+                                if (isEditorMode) {
+                                  setDraggedTeam({ teamId: tid, lobbyId: lobby.id, roundId: round.id, teamIndex });
+                                  e.dataTransfer.effectAllowed = "move";
+                                }
+                              }}
+                              onDragEnd={() => setDraggedTeam(null)}
+                              onDragOver={(e) => {
+                                if (isEditorMode && draggedTeam && draggedTeam.roundId === round.id && draggedTeam.lobbyId === lobby.id) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              onDrop={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (isEditorMode && draggedTeam && draggedTeam.roundId === round.id && draggedTeam.lobbyId === lobby.id && draggedTeam.teamIndex !== teamIndex) {
+                                  reorderTeamInLobby(round.id, lobby.id, draggedTeam.teamIndex, teamIndex);
+                                  setDraggedTeam(null);
+                                }
+                              }}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                gap: 6,
+                                cursor: isEditorMode ? "grab" : "default",
+                                opacity: draggedTeam?.teamId === tid ? 0.5 : 1,
+                                padding: "4px 6px",
+                                borderRadius: 4,
+                                background: draggedTeam?.teamId === tid ? "rgba(34,249,119,.15)" : "transparent",
+                                transition: "all 0.2s",
+                              }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
                                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: team?.color || C.muted, flexShrink: 0 }} />
                                 <span style={{ fontSize: 11, color: C.text, fontFamily: "Barlow", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{team?.name || "?"}</span>
                               </div>
-                              {res && (
-                                <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                                  <Badge color={res.placement === 1 ? C.primary : C.muted}>#{res.placement}</Badge>
-                                  {res.kills > 0 && <Badge color={C.secondary}>⚔{res.kills}</Badge>}
+                              {res ? (
+                                <div style={{ display: "flex", gap: 2, flexShrink: 0, alignItems: "center", fontSize: 9, color: C.muted, fontFamily: "Barlow", fontWeight: 700 }}>
+                                  <span style={{ color: res.placement === 1 ? C.primary : C.text }}>🥇 #{res.placement}</span>
+                                  <span style={{ color: C.secondary, marginLeft: 4 }}>⚔ {res.kills}</span>
+                                </div>
+                              ) : (
+                                <div style={{ display: "flex", gap: 2, flexShrink: 0, alignItems: "center", fontSize: 9, color: C.muted, fontFamily: "Barlow", fontWeight: 700 }}>
+                                  <span>місце —</span>
+                                  <span style={{ marginLeft: 4 }}>кіли —</span>
                                 </div>
                               )}
                             </div>
